@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appliance Energy Prediction Dashboard</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+<body>
+    <main class="dashboard">
+        <nav class="app-tabs" aria-label="Dashboard sections">
+            <button class="tab-button active" type="button" data-tab="overview">Overview</button>
+            <button class="tab-button" type="button" data-tab="dataset">Dataset</button>
+            <button class="tab-button" type="button" data-tab="statistics">Statistics</button>
+            <button class="tab-button" type="button" data-tab="inference">Inference</button>
+            <button class="tab-button" type="button" data-tab="simulation">Simulation</button>
+            <button class="tab-button" type="button" data-tab="report">Report</button>
+        </nav>
+
+        <!-- OVERVIEW TAB -->
+        <header class="hero tab-panel active" data-tab-panel="overview">
+            <div>
+                <p class="eyebrow">Analytics Dashboard</p>
+                <h1>Household Energy Consumption Analysis</h1>
+                <p class="objective">
+                    Comprehensive statistical analysis of appliance energy consumption patterns using the Appliance Energy Prediction dataset.
+                    This analysis employs descriptive statistics, correlation analysis, probability theory, hypothesis testing, and Monte Carlo simulations
+                    to understand household energy usage patterns and the relationship between appliance and lighting energy consumption.
+                </p>
+            </div>
+
+            <div class="summary-grid">
+                <article class="summary-card">
+                    <span>Total Observations</span>
+                    <strong id="rowCount">Loading</strong>
+                </article>
+                <article class="summary-card">
+                    <span>Variables Analyzed</span>
+                    <strong id="variableCount">Loading</strong>
+                </article>
+                <article class="summary-card">
+                    <span>Appliances Mean</span>
+                    <strong id="appMean">Loading</strong> <small>Wh</small>
+                </article>
+                <article class="summary-card">
+                    <span>Lights Mean</span>
+                    <strong id="lightsMean">Loading</strong> <small>Wh</small>
+                </article>
+            </div>
+
+            <div class="overview-sections">
+                <section class="section-card">
+                    <h2>UCI Dataset Context</h2>
+                    <p><strong>Location:</strong> Skovlunde, Denmark</p>
+                    <p><strong>Time Period:</strong> January 11 – February 21 and June 5 – 19, 2016</p>
+                    <p><strong>Observations:</strong> 19,735 records at 10-minute intervals</p>
+                    <p><strong>Variables:</strong> 29 columns including energy consumption, environmental, and weather data</p>
+                </section>
+
+                <section class="section-card">
+                    <h2>Analysis Methodology</h2>
+                    <p><strong>Descriptive Statistics:</strong> Mean, median, mode, variance, standard deviation</p>
+                    <p><strong>Relationship Analysis:</strong> Pearson correlation and scatter visualization</p>
+                    <p><strong>Probability Estimation:</strong> Empirical probability for specified thresholds</p>
+                    <p><strong>Hypothesis Testing:</strong> Comparison of means between groups</p>
+                    <p><strong>Simulation:</strong> Monte Carlo method for forecasting possible values</p>
+                </section>
+            </div>
+        </header>
+
+        <!-- DATASET TAB -->
+        <section class="section-card tab-panel" data-tab-panel="dataset">
+            <h2>Dataset</h2>
+            <div class="control-grid">
+                <div>
+                    <label for="sortColumn">Sort by:</label>
+                    <select id="sortColumn">
+                        <option value="">None</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="sortDirection">Direction:</label>
+                    <select id="sortDirection">
+                        <option value="asc">Ascending</option>
+                        <option value="desc">Descending</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table id="dataTable">
+                    <thead id="tableHead">
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <button id="prevPage" class="pagination-btn">← Previous</button>
+                <span id="pageInfo">Page 1</span>
+                <button id="nextPage" class="pagination-btn">Next →</button>
+            </div>
+            <p id="rowCountDisplay">Loading...</p>
+        </section>
+
+        <!-- STATISTICS TAB -->
+        <section class="section-card tab-panel" data-tab-panel="statistics">
+            <h2>Statistics</h2>
+
+            <div class="subsection">
+                <h3>Central Tendency and Dispersion</h3>
+                <div class="control-grid">
+                    <div>
+                        <label for="statsVariable">Select Variable:</label>
+                        <select id="statsVariable">
+                            <option value="Appliances">Appliances</option>
+                            <option value="lights">Lights</option>
+                            <option value="T1">T1</option>
+                            <option value="RH_1">RH_1</option>
+                            <option value="T_out">T_out</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="metric-grid" id="statsGrid">
+                    <!-- Statistics will be populated here -->
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <div class="subsection">
+                <h3>Correlation and Trends</h3>
+                <div class="metric-grid">
+                    <article class="metric-card">
+                        <span>Appliances vs Lights Correlation</span>
+                        <strong id="correlationValue">Loading</strong>
+                    </article>
+                </div>
+
+                <div class="chart-grid">
+                    <div class="chart-panel">
+                        <h4>Appliances Over Time</h4>
+                        <canvas id="applianceLineChart"></canvas>
+                    </div>
+                    <div class="chart-panel">
+                        <h4>Appliances vs Lights</h4>
+                        <canvas id="scatterChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- INFERENCE TAB -->
+        <section class="section-card tab-panel" data-tab-panel="inference">
+            <h2>Inference</h2>
+
+            <div class="subsection">
+                <h3>Probability Estimates</h3>
+                <div class="control-grid">
+                    <div>
+                        <label for="appliancesThreshold">Appliances Threshold (Wh):</label>
+                        <select id="appliancesThreshold">
+                            <option value="50">50 Wh (25th percentile)</option>
+                            <option value="100">100 Wh (50th percentile)</option>
+                            <option value="150">150 Wh (75th percentile)</option>
+                            <option value="200">200 Wh (90th percentile)</option>
+                            <option value="250">250 Wh (95th percentile)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="lightsValue">Lights Value (Wh):</label>
+                        <select id="lightsValue">
+                            <option value="0">0</option>
+                            <option value="30">30</option>
+                            <option value="40">40</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="metric-grid">
+                    <article class="metric-card">
+                        <span id="appProb1Label">P(Appliances > 100 Wh)</span>
+                        <strong id="appProb1">Loading</strong>
+                    </article>
+                    <article class="metric-card">
+                        <span id="lightsProb1Label">P(Lights = 0 Wh)</span>
+                        <strong id="lightsProb1">Loading</strong>
+                    </article>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <div class="subsection">
+                <h3>Hypothesis Test</h3>
+                <p id="hypothesisDescription">Comparing appliance consumption when lights = 30 Wh vs lights = 40 Wh</p>
+
+                <div class="metric-grid">
+                    <article class="metric-card">
+                        <span id="h0Text">H₀: μ(Appliances|lights=30) = μ(Appliances|lights=40)</span>
+                        <small>Null Hypothesis</small>
+                    </article>
+                    <article class="metric-card">
+                        <span id="h1Text">H₁: μ(Appliances|lights=30) ≠ μ(Appliances|lights=40)</span>
+                        <small>Alternative Hypothesis</small>
+                    </article>
+                </div>
+
+                <div class="metric-grid">
+                    <article class="metric-card">
+                        <span id="mean30Label">Mean (lights = 30)</span>
+                        <strong id="mean30">Loading</strong>
+                        <small id="count30">n = Loading</small>
+                    </article>
+                    <article class="metric-card">
+                        <span id="mean40Label">Mean (lights = 40)</span>
+                        <strong id="mean40">Loading</strong>
+                        <small id="count40">n = Loading</small>
+                    </article>
+                </div>
+
+                <div class="metric-grid">
+                    <article class="metric-card">
+                        <span>t-statistic</span>
+                        <strong id="tStatistic">Loading</strong>
+                    </article>
+                    <article class="metric-card">
+                        <span>p-value</span>
+                        <strong id="pValue">Loading</strong>
+                    </article>
+                </div>
+
+                <p id="inferenceText">Loading...</p>
+            </div>
+        </section>
+
+        <!-- SIMULATION TAB -->
+        <section class="section-card tab-panel" data-tab-panel="simulation">
+            <h2>Simulation</h2>
+            <p>Monte Carlo simulation for possible future values of appliance or lighting energy consumption.</p>
+
+            <div class="control-grid">
+                <div>
+                    <label for="simVariable">Variable:</label>
+                    <select id="simVariable">
+                        <option value="Appliances">Appliances</option>
+                        <option value="lights">Lights</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="simCount">Simulations:</label>
+                    <select id="simCount">
+                        <option value="10">10</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="500">500</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="simNoise">Noise Level:</label>
+                    <select id="simNoise">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <button id="runSimButton" class="btn">Run Simulation</button>
+            </div>
+
+            <div class="metric-grid" id="simStatsGrid">
+                <!-- Simulation statistics will be displayed here -->
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-panel">
+                    <h4>Simulated Values</h4>
+                    <canvas id="simulationLineChart"></canvas>
+                </div>
+
+                <div class="table-container">
+                    <h4>Simulation Results</h4>
+                    <div class="table-wrapper">
+                        <table id="simTable">
+                            <thead>
+                                <tr>
+                                    <th>Iteration</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="simTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- REPORT TAB -->
+        <section class="section-card tab-panel" data-tab-panel="report">
+            <h2>Report</h2>
+
+            <div id="reportContent" class="report-content">
+                <h3>Executive Summary</h3>
+                <p id="reportSummary">Loading...</p>
+
+                <h3>Dataset Overview</h3>
+                <p id="reportDataset">Loading...</p>
+
+                <h3>Key Findings</h3>
+                <ul id="reportFindings">
+                    <li>Loading...</li>
+                </ul>
+
+                <h3>Detailed Analysis</h3>
+                <div id="reportAnalysis">Loading...</div>
+
+                <h3>Hypothesis Test Results</h3>
+                <p id="reportHypothesis">Loading...</p>
+
+                <h3>Conclusions</h3>
+                <p id="reportConclusion">Loading...</p>
+
+                <h3>Team Members</h3>
+                <table class="team-table">
+                    <thead>
+                        <tr>
+                            <th>USN</th>
+                            <th>Name</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teamTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="/script.js"></script>
+</body>
+</html>
