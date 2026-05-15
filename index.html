@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appliance Energy Prediction Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="dashboard">
+        <nav class="app-tabs" aria-label="Dashboard sections">
+            <button class="tab-button active" type="button" data-tab="overview">Overview</button>
+            <button class="tab-button" type="button" data-tab="dataset">Dataset</button>
+            <button class="tab-button" type="button" data-tab="statistics">Statistics</button>
+            <button class="tab-button" type="button" data-tab="inference">Inference</button>
+            <button class="tab-button" type="button" data-tab="simulation">Simulation</button>
+            <button class="tab-button" type="button" data-tab="report">Report</button>
+        </nav>
+
+        <header class="hero tab-panel active" data-tab-panel="overview">
+            <div>
+                <p class="eyebrow">Analytics Dashboard</p>
+                <h1>Household Energy Consumption Analysis</h1>
+                <p class="objective">
+                    Comprehensive statistical analysis of appliance energy consumption patterns using the Appliance Energy Prediction dataset.
+                    This analysis employs descriptive statistics, correlation analysis, probability theory, hypothesis testing, and Monte Carlo simulations
+                    to understand household energy usage patterns and the relationship between appliance and lighting energy consumption.
+                </p>
+            </div>
+
+            <div class="summary-grid">
+                <article class="summary-card">
+                    <span>Total Observations</span>
+                    <strong id="rowCount">Loading</strong>
+                </article>
+                <article class="summary-card">
+                    <span>Variables Analyzed</span>
+                    <strong id="variableCount">Loading</strong>
+                </article>
+                <article class="summary-card">
+                    <span>Appliances Mean</span>
+                    <strong id="appMean">Loading</strong> <small>Wh</small>
+                </article>
+                <article class="summary-card">
+                    <span>Lights Mean</span>
+                    <strong id="lightsMean">Loading</strong> <small>Wh</small>
+                </article>
+            </div>
+
+            <div class="overview-sections">
+                <section class="overview-section">
+                    <h3>Dataset Overview</h3>
+                    <p>
+                        This analysis utilizes the <strong>Appliance Energy Prediction dataset</strong> from the UCI Machine Learning Repository. The dataset comprises 19,735 observations collected over two periods in 2010 at a house in Skovlunde, Denmark: January 11 – February 21 and June 5 – 19. Measurements were taken at 10-minute intervals, capturing appliance energy consumption (Wh), lighting energy consumption (Wh), indoor and outdoor temperature (°C), relative humidity (%), wind speed (m/s), and atmospheric pressure (mm Hg). This comprehensive dataset provides the foundation for understanding household energy consumption patterns and their relationships with environmental factors, making it ideal for statistical analysis and predictive modeling.
+                    </p>
+                </section>
+
+                <section class="overview-section">
+                    <h3>Analysis Methodology</h3>
+                    <p>
+                        Our analysis employs multiple statistical techniques to extract meaningful insights from the data. <strong>Descriptive statistics</strong>
+                        (mean, median, variance, standard deviation) characterize the central tendency and variability of energy consumption variables.
+                        <strong>Correlation analysis</strong> examines relationships between appliance energy use and other variables. <strong>Hypothesis testing</strong>
+                        evaluates whether lighting levels significantly affect appliance energy consumption. <strong>Probability analysis</strong> estimates
+                        the likelihood of specific energy consumption thresholds, while <strong>Monte Carlo simulations</strong> model potential future values
+                        under varying conditions. These methods are integrated to provide a holistic understanding of household energy consumption dynamics.
+                    </p>
+                </section>
+
+            </div>
+        </header>
+
+        <section class="section-card tab-panel" data-tab-panel="dataset">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Dataset Section</p>
+                    <h2>Interactive Data Table</h2>
+                </div>
+            </div>
+            <div class="table-meta">
+                <span id="tableStatus">Loading dataset.csv</span>
+            </div>
+            <div class="table-wrap">
+                <table id="dataTable">
+                    <thead id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <button id="prevPage" type="button">Previous</button>
+                <span id="pageInfo">Page 1</span>
+                <button id="nextPage" type="button">Next</button>
+            </div>
+        </section>
+
+        <section class="section-card tab-panel" data-tab-panel="statistics">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Statistics Section</p>
+                    <h2>Descriptive Statistics and Relationships</h2>
+                </div>
+                <label class="control-label">
+                    Variable
+                    <select id="statsVariable">
+                        <option>Appliances</option>
+                        <option>lights</option>
+                        <option>T1</option>
+                        <option>RH_1</option>
+                        <option>T_out</option>
+                    </select>
+                </label>
+            </div>
+
+            <h3>Central Tendency and Dispersion</h3>
+            <div class="metric-grid" id="statsCards"></div>
+
+            <div class="subsection-divider"></div>
+            <h3>Correlation and Trends</h3>
+            <article class="correlation-card">
+                <span>Correlation: Appliances vs lights</span>
+                <strong id="correlationValue">Loading</strong>
+            </article>
+            <div class="chart-grid">
+                <div class="chart-panel">
+                    <h3>Appliances Over Time</h3>
+                    <canvas id="applianceLineChart"></canvas>
+                </div>
+                <div class="chart-panel">
+                    <h3>Appliances vs lights</h3>
+                    <canvas id="scatterChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-card tab-panel" data-tab-panel="inference">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Inference Section</p>
+                    <h2>Hypothesis Testing and Probability</h2>
+                </div>
+            </div>
+
+            <h3>Probability Estimates</h3>
+            <div class="probability-input-group">
+                <div class="input-pair">
+                    <label class="control-label">
+                        Appliances threshold
+                        <select id="applianceThreshold">
+                            <option>Loading...</option>
+                        </select>
+                    </label>
+                    <label class="control-label">
+                        lights value
+                        <select id="lightsValue">
+                            <option>Loading...</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+            <div class="metric-grid two">
+                <article class="metric-card">
+                    <span>P(Appliances &gt; threshold)</span>
+                    <strong id="applianceProbability">Loading</strong>
+                </article>
+                <article class="metric-card">
+                    <span>P(lights = selected value)</span>
+                    <strong id="lightsProbability">Loading</strong>
+                </article>
+            </div>
+
+            <div class="subsection-divider"></div>
+            <h3>Hypothesis Test: Effect of lights on Appliance Energy</h3>
+            <div class="hypothesis-grid">
+                <article>
+                    <span>H0</span>
+                    <p>lights do not affect appliance energy consumption</p>
+                </article>
+                <article>
+                    <span>H1</span>
+                    <p>lights affect appliance energy consumption</p>
+                </article>
+            </div>
+            <div class="metric-grid two">
+                <article class="metric-card">
+                    <span>Mean Appliances when lights = 30</span>
+                    <strong id="lowLightMean">Loading</strong>
+                </article>
+                <article class="metric-card">
+                    <span>Mean Appliances when lights = 40 or 50</span>
+                    <strong id="highLightMean">Loading</strong>
+                </article>
+            </div>
+            <p class="inference-text" id="hypothesisInference">Loading hypothesis inference.</p>
+        </section>
+
+        <section class="section-card tab-panel" data-tab-panel="simulation">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Simulation Section</p>
+                    <h2>Future Value Simulation</h2>
+                </div>
+            </div>
+            <div class="control-grid three">
+                <label class="control-label">
+                    Variable
+                    <select id="simulationVariable">
+                        <option>Appliances</option>
+                        <option label="Lights">lights</option>
+                    </select>
+                </label>
+                <label class="control-label">
+                    Simulations
+                    <select id="simulationCount">
+                        <option>10</option>
+                        <option>50</option>
+                        <option selected>100</option>
+                        <option>500</option>
+                    </select>
+                </label>
+                <label class="control-label">
+                    Noise level
+                    <select id="noiseLevel">
+                        <option value="low">low</option>
+                        <option value="medium" selected>medium</option>
+                        <option value="high">high</option>
+                    </select>
+                </label>
+            </div>
+            <div class="metric-grid two">
+                <article class="metric-card">
+                    <span>Simulated Mean</span>
+                    <strong id="simulationMean">Loading</strong>
+                </article>
+                <article class="metric-card">
+                    <span>Simulated Variance</span>
+                    <strong id="simulationVariance">Loading</strong>
+                </article>
+            </div>
+            <div class="simulation-layout">
+                <div class="chart-panel">
+                    <h3>Simulation Line Chart</h3>
+                    <canvas id="simulationChart"></canvas>
+                </div>
+                <div class="table-wrap compact">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Simulation</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="simulationTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-card tab-panel" data-tab-panel="report">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Analysis Report</p>
+                    <h2>Statistical Summary Report</h2>
+                </div>
+            </div>
+
+            <div class="report-container">
+                <div class="report-header">
+                    <h3>Appliance Energy Prediction Analysis</h3>
+                </div>
+
+                <div class="report-section">
+                    <h4>Executive Summary</h4>
+                    <div class="report-content">
+                        <p id="reportSummary"></p>
+                    </div>
+                </div>
+
+                <div class="report-grid">
+                    <div class="report-box">
+                        <h5>Dataset Overview</h5>
+                        <ul id="datasetFacts">
+                            <li>Total Observations: <strong id="rf-rows">-</strong></li>
+                            <li>Variables Analyzed: <strong id="rf-vars">-</strong></li>
+                            <li>Time Period: <strong>Multiple observations</strong></li>
+                        </ul>
+                    </div>
+
+                    <div class="report-box">
+                        <h5>Key Findings</h5>
+                        <ul id="keyFindings">
+                            <li>Appliances Mean: <strong id="kf-app-mean">-</strong> Wh</li>
+                            <li>Lights Mean: <strong id="kf-lights-mean">-</strong> Wh</li>
+                            <li>Correlation (App-Lights): <strong id="kf-correlation">-</strong></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h4>Detailed Analysis</h4>
+                    <div class="report-grid-2col">
+                        <div class="analysis-block">
+                            <h5>Appliances Energy Consumption</h5>
+                            <p><strong>Mean:</strong> <span id="ra-app-mean">-</span></p>
+                            <p><strong>Median:</strong> <span id="ra-app-median">-</span></p>
+                            <p><strong>Std. Dev:</strong> <span id="ra-app-stddev">-</span></p>
+                        </div>
+                        <div class="analysis-block">
+                            <h5>Lights Energy Consumption</h5>
+                            <p><strong>Mean:</strong> <span id="ra-lights-mean">-</span></p>
+                            <p><strong>Median:</strong> <span id="ra-lights-median">-</span></p>
+                            <p><strong>Std. Dev:</strong> <span id="ra-lights-stddev">-</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h4>Hypothesis Test Results</h4>
+                    <div class="hypothesis-result">
+                        <p><strong>Hypothesis:</strong> Does lighting affect appliance energy consumption?</p>
+                        <p id="reportHypothesis"></p>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h4>Conclusions</h4>
+                    <div class="conclusion-box">
+                        <p id="reportConclusion"></p>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h4>Project Team</h4>
+                    <div class="team-members-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Team Member</th>
+                                    <th>Student ID</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teamMembersTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
