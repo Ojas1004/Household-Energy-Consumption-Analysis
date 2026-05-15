@@ -1,209 +1,133 @@
 ## Project Overview
 
-**Household Energy Consumption Analysis (HECA)** is a statistical analysis web application dashboard for household appliance energy consumption. It analyzes the Appliance Energy Prediction dataset (19,735 observations from Skovlunde, Denmark) with descriptive statistics, correlation analysis, probability estimates, hypothesis testing, and Monte Carlo simulations.
-
-**Architecture**: Flask (Python) backend + Vanilla JavaScript (ES5) + HTML5/CSS3 frontend with Chart.js visualizations. All statistical computations run on the backend; frontend only displays results.
-
-## Stack
-
-- **Backend**: Python 3.8+, Flask 3.0+, pandas 2.0+, numpy 1.24+, scipy 1.10+
-- **Frontend**: Vanilla JavaScript (ES5), HTML5, CSS3, Chart.js 3.9+
-- **Data**: CSV file (dataset.csv, 19,735 rows × 29 columns)
+**Household Energy Consumption Analysis** is an interactive web-based statistical analysis dashboard that visualizes and analyzes household appliance energy consumption patterns using the Appliance Energy Prediction dataset. It provides descriptive statistics, trend visualization, probability analysis, hypothesis testing, and Monte Carlo simulations.
 
 ## Architecture
 
-### Backend (Flask, app.py)
+### Core Files
+- **index.html** — Single-page application markup with tabbed interface and Chart.js canvas elements
+- **script.js** — Vanilla JavaScript (no framework) with statistical calculations, CSV parsing, charting, and DOM manipulation
+- **style.css** — CSS custom properties (variables) for theming; responsive grid layouts for dashboard components
+- **dataset.csv** — The Appliance Energy Prediction dataset (~19K rows); CSV is loaded client-side via fetch
 
-**Global State**:
-- `dataset` — pandas DataFrame loaded from CSV
-- `headers` — list of column names
-- `dataRows` — list of row values
+### Key Concepts
 
-**Core Functions**:
-- `load_dataset()` — Load CSV and populate global variables
-- `calculate_statistics(column_name)` — Descriptive stats (mean, median, mode, variance, std dev, min, max, q1, q3, count)
-- `calculate_correlation(col1, col2)` — Pearson correlation coefficient
-- `calculate_probability(column_name, condition_type, condition_value)` — Empirical probability for conditions (greater_than, less_than, equal_to, greater_equal)
-- `hypothesis_test(col1, col2, group1_value, group2_value)` — Independent t-test comparing two groups by filtering col2 on group values, testing col1
-- `monte_carlo_simulation(column_name, num_simulations, noise_level)` — Generate random samples with configurable noise (low 0.1σ, medium 0.3σ, high 0.5σ)
+**Tab-Based Navigation**: The dashboard has 6 tabs (Overview, Dataset, Statistics, Inference, Simulation, Report), each represented by a tab panel in the DOM. Tab switching is driven by click handlers and URL hash changes for bookmarkable states. Tabs are organized by statistical methodology: describe → explore relationships → test/infer → predict → summarize. The Overview tab displays key metrics and UCI dataset context, while the Report tab provides comprehensive statistical analysis with team information.
 
-**API Endpoints** (all return JSON):
-- `GET /` — Serve dashboard HTML
-- `GET /api/load-data` — Return headers, row count, variable count, and paginated data
-- `GET /api/statistics/<column_name>` — Descriptive statistics for a column
-- `GET /api/correlation?col1=X&col2=Y` — Pearson correlation
-- `GET /api/probability?column=X&condition_type=Y&value=Z` — Empirical probability
-- `GET /api/hypothesis-test?col1=X&col2=Y&group1_value=A&group2_value=B` — t-test results
-- `GET /api/simulation?column=X&num_simulations=N&noise_level=L` — Monte Carlo simulation results
-- `GET /api/dataset?page=P&rows_per_page=R&sort_column=C&sort_direction=D` — Paginated/sorted dataset
-- `GET /api/export-report` — Download analysis report as CSV
-- `GET /api/inference-data?...` — All inference data (hypothesis test + probabilities) in one call
-- `GET /style.css` — Serve stylesheet
-- `GET /script.js` — Serve JavaScript
+**Statistical Calculations**: All analysis is computed client-side:
+- **Descriptive stats** (mean, median, mode, variance, std dev) via math functions
+- **Correlation & trends** — Scatter plots and line charts showing bivariate relationships and temporal patterns
+- **Probability estimates** — Empirical cumulative distribution (matching condition count / total count) with dropdown-selected thresholds
+- **Hypothesis testing** — Compares means between groups (lights = 30 vs lights ≥ 40) with inference text
+- **Simulation** — Generates random observations from the empirical distribution with configurable noise (10–500 simulations)
 
-**Important Details**:
-- `hypothesis_test()` bug fix: line 127 must filter for col2==group2_value but extract col1 data: `dataset[dataset[col2] == float(group2_value)][col1]`
-- Boolean serialization: use `bool(p_value < 0.05)` for JSON compatibility
-- CSV file must be named `dataset.csv` (not data.csv)
-- Flask runs on localhost:5000 with debug=False
+**Data Pipeline**: CSV → parsing (custom parser handles quoted fields and CRLF) → object array → filtering/sorting for table → slicing for pagination → aggregation for stats/charts.
 
-### Frontend (web/)
-
-**Files**:
-- `index.html` — Single-page dashboard with 6 tabs (Overview, Dataset, Statistics, Inference, Simulation, Report)
-- `script.js` — All frontend logic: tab navigation, API calls, charting, DOM manipulation (~450 lines)
-- `style.css` — Responsive CSS Grid layouts with CSS custom properties for theming
-
-**Key JavaScript Functions**:
-- `loadDataset()` — Fetch /api/load-data, populate global `datasetHeaders`/`datasetRows`, initialize tabs
-- `updateStatistics()` — Fetch /api/statistics/<variable>, display metric cards, create charts
-- `createStatisticsCharts()` — Create Chart.js line chart (Appliances over time) and scatter chart (Appliances vs Lights); sample to 650 points for performance
-- `updateHypothesisTest()` — Fetch /api/hypothesis-test with dropdown values, update H0/H1 formulas dynamically, display results
-- `updateProbabilities()` — Fetch /api/probability data based on threshold dropdowns
-- `runSimulation()` — Fetch /api/simulation, display histogram and results table
-- `generateReport()` — Fetch /api/statistics/Appliances, populate report sections with analysis summary
-- `displayDataset()` — Render paginated table with sorting support
-
-**Important Details**:
-- Initialization: loadDataset() → updateStatistics('Appliances') → updateCorrelation() → updateProbabilities() → updateHypothesisTest() → generateReport() → runSimulation() (with ~50-100ms delays)
-- Dropdowns trigger updateHypothesisTest() + updateProbabilities() on change
-- Chart containers use class="chart-panel" (300px height, responsive grid)
-- Uses fetch() with promise chains (ES5 compatible)
-
-## Running the Application
-
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run Flask server
-python3 app.py
-
-# Navigate to http://localhost:5000 in browser
-```
-
-Server logs "Running on http://127.0.0.1:5000". The dashboard auto-initializes with default statistics, charts, and hypothesis test.
+**Charting**: Chart.js instances are stored in global variables (`applianceLineChart`, `scatterChart`, `simulationLineChart`). Charts must be destroyed and recreated when data changes. Resize is triggered both immediately (requestAnimationFrame) and with a 120ms delay to handle async layout.
 
 ## Development Workflow
 
-### Adding a New Statistical Calculation
+### Viewing the Dashboard
+- Open `index.html` in a browser (or use a local HTTP server to avoid CORS issues on CSV fetch)
+- Browser console logs loading errors if dataset.csv cannot be found
+- Overview tab displays 4 key metric cards (observations, variables, appliances mean, lights mean) plus UCI dataset description (Skovlunde, Denmark; Jan 11–Feb 21 & Jun 5–19, 2010; 19,735 observations at 10-min intervals)
+- Dataset table uses 6 rows per page (reduced from 10) to fit on a single viewport without vertical scroll
+- Simulation table max-height set to 260px for compact single-page display
 
-1. Implement function in `app.py` (e.g., `calculate_skewness()`)
-2. Add API endpoint that calls it (e.g., `@app.route('/api/skewness/<column>')`)
-3. Call endpoint in `script.js` where needed (e.g., in `updateStatistics()` or new function)
-4. Update HTML to display result (add metric card or update existing div)
+### Report Tab
+The Report tab displays a professional statistical summary with:
+- **generateReport()** — Populates all report sections with computed statistics (called when data loads)
+- **printReport()** — Triggers browser print (CSS media query hides UI chrome for professional PDF output)
+- **exportReportCSV()** — Generates and downloads CSV file with comprehensive analysis data
+- **Team Members Table** — Lists all team members with their student IDs at the bottom of the report
 
-### Modifying the Hypothesis Test
+Team members are configured in the `teamMembers` array at the top of script.js with name and studentId properties.
 
-The test dynamically compares appliance consumption between two user-selected conditions:
-- **Group 1**: Appliances consumption where lights = [user's Lights Value selection]
-- **Group 2**: Appliances consumption where Appliances > [user's Appliances Threshold selection]
-
-To modify the hypothesis test logic:
-1. In `script.js`, update `updateHypothesisTest()` to change which dropdowns are used
-2. In `app.py`, modify `hypothesis_test()` function to change filtering criteria (currently: Group 1 uses equality filter on col2, Group 2 uses threshold filter on col1)
-3. Update HTML element IDs and labels in index.html to reflect new comparisons
+### Adding a New Statistical Metric
+1. Add a calculation function (e.g., `quartile()`)
+2. Update `updateStatistics()` to include it in the statistics array
+3. Optionally add it to UI controls (e.g., dropdown in `statsVariable` list)
+4. Update `generateReport()` to include it in the CSV export if needed
 
 ### Adding a New Tab
+1. Add a `<button class="tab-button" data-tab="name">Label</button>` to the nav
+2. Add a `<section class="section-card tab-panel" data-tab-panel="name">` with content
+3. Tab activation happens automatically via existing `initializeTabs()` logic
 
-1. Add button to nav: `<button class="tab-button" data-tab="name">Label</button>`
-2. Add section: `<section class="section-card tab-panel" data-tab-panel="name">...</section>`
-3. Add API endpoint in `app.py` if new data is needed
-4. Add fetch + DOM update in `script.js` if tab has interactive elements
-5. Tab navigation is automatic via existing `initializeTabs()` logic
-
-### Testing API Endpoints
-
-```bash
-# While server is running (python3 app.py):
-curl http://localhost:5000/api/statistics/Appliances | python3 -m json.tool
-curl 'http://localhost:5000/api/correlation?col1=Appliances&col2=lights'
-curl 'http://localhost:5000/api/hypothesis-test?col1=Appliances&col2=lights&group1_value=30&group2_value=40'
-curl 'http://localhost:5000/api/simulation?column=Appliances&num_simulations=100&noise_level=medium'
-```
-
-## Dataset and Variables
-
-**File**: dataset.csv (19,735 rows × 29 columns)
-
-**Key Columns**:
-- `Appliances`, `lights` — Energy consumption (Wh)
-- `T1`–`T9`, `RH_1`–`RH_9` — Temperature (°C) and humidity (%) from rooms 1–9
-- `T_out`, `RH_out`, `Windspeed`, `Visibility`, `Pressure` — Outdoor environment
-
-**Analysis Variables** (visible in dropdown):
-- Appliances, lights, T1, RH_1, T_out (configurable in script.js)
-
-## Key Statistics
-
-From Report.tex and verified via API:
-- **Appliances**: Mean 97.69 Wh, Median 60 Wh, Mode 50 Wh, Std Dev 102.52 Wh, Variance 10,510.82 Wh²
-  - Range: 10–1,080 Wh (high variance due to wide spread between baseline and peak usage)
-  - Count: 19,735 observations
-- **Lights**: Mean 3.80 Wh (77.28% of observations are 0 — lights off most of the time)
-- **Correlation**: Appliances vs Lights = 0.197 (weak positive relationship)
-
-## Browser Compatibility
-
-- ES5 JavaScript (no arrow functions, destructuring for broad compatibility)
-- Fetch API required (no IE11 support)
-- Chart.js 3.9+ for canvas visualization
-- Responsive design for mobile/tablet via CSS Grid and viewport meta tag
-
-## Performance and Scalability
-
-- CSV load + statistics calculation: ~500ms for 19.7K rows on modern hardware
-- Charts sample to 650 points to prevent rendering lag
-- Pagination: 8 rows/page prevents rendering many DOM nodes
-- All computation on backend; frontend is just a display layer
-- For datasets >100K rows, consider:
-  - Paginating data delivery from backend
-  - Adding server-side data aggregation caching
-  - Using Web Workers for chart rendering (frontend)
-
-## Troubleshooting
-
-**Port 5000 in use?**
-```bash
-lsof -ti:5000 | xargs kill -9
-# Or change port in app.py: app.run(port=5001)
-```
-
-**"No module named flask/pandas/numpy/scipy"**
-```bash
-pip install -r requirements.txt
-```
-
-**Dataset not loading?**
-- Verify `dataset.csv` exists in the same directory as `app.py`
-- Check app.py line 26: `csv_path = os.path.join(os.path.dirname(__file__), 'dataset.csv')`
-- Check server logs for "Error loading dataset"
-
-**API returns 400 errors?**
-- Check parameter names (col1, col2, condition_type, condition_value, etc.)
-- Verify column names exist in dataset (case-sensitive: "Appliances", "lights", "T1", etc.)
-- Check console.log in browser DevTools for fetch errors
-
-**Charts not rendering?**
-- Check browser console for JavaScript errors
-- Ensure Chart.js CDN is loaded: `<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>`
-- Verify chart containers have class="chart-panel" with 300px height
+### Modifying Dataset Columns
+- Important columns are hardcoded in `importantColumns` array at the top of script.js
+- Filter/sort functions iterate over all headers dynamically, so new columns are automatically supported in the table
 
 ## Common Tasks
 
-**Update team member names**: Edit `teamMembers` array at top of script.js
+**Update displayed statistics for a variable**: Modify the `statistics` array in `updateStatistics()` (line ~389).
 
-**Change default variable for statistics tab**: Modify `statsVariable` dropdown default in index.html or script.js initialization
+**Change probability thresholds**: The Appliances threshold and lights value dropdowns are populated by `populateProbabilityDropdowns()`. Appliances offers preset percentiles (25–250 Wh), lights values are auto-generated from dataset unique values. Modify the function to change available options.
 
-**Add new probability threshold**: Add `<option>` to `appliancesThreshold` select in index.html, then updateProbabilities() will use new value
+**Adjust chart appearance**: Modify `chartOptions()` function or the Chart.js config objects in `createTrendCharts()`. Chart heights are 300px (panel) / 240px (canvas); `.chart-grid` has 20px top margin and 20px gap between charts.
 
-**Modify hypothesis test groups**: Change dropdown defaults (group1_value, group2_value) in index.html and updateHypothesisTest() function
+**Fix CSV parsing issues**: Debug in `parseCSV()` function; handles quoted fields and CRLF correctly but may need adjustment for unusual CSV dialects.
 
-**Change simulation noise levels**: Modify `noise_factors` dict in `monte_carlo_simulation()` function in app.py
+**Resize chart on tab switch**: Already implemented; calls `resizeCharts()` on tab activation.
 
-## Requirements Documentation
+**Customize report content**: Edit the HTML report section divs or modify `generateReport()` to populate different metrics. Report auto-generates on data load.
 
-The project satisfies the academic requirement to use Python for statistical computations:
-- All statistics (mean, median, mode, variance, correlation, t-test, probability, simulation) are implemented in Python using pandas/numpy/scipy
-- Frontend only displays results via API calls
-- Refer to Report.tex for detailed mathematical methodology
+**Change report styling**: Modify `.report-*` classes in style.css. Print media query handles PDF formatting (hides tabs, optimizes spacing, controls page breaks).
+
+## Data and Variables
+
+### Key Dataset Columns
+- **date** — Observation timestamp
+- **Appliances** — Energy consumption of appliances (Wh)
+- **lights** — Energy consumption of lights (Wh)
+- **T1, T2, ..., T9** — Temperature readings from different rooms (°C)
+- **RH_1, RH_2, ..., RH_9** — Relative humidity readings (%); tracked and displayed
+- **T_out** — Outdoor temperature (°C)
+- **RH_out** — Outdoor relative humidity (%)
+- **Windspeed** — Wind speed (m/s)
+- **Visibility** — Visibility (km)
+- **Pressure** — Atmospheric pressure (mm Hg)
+
+### Analysis Variables
+`statsVariables` array defines which columns are used for statistical analysis (Appliances, lights, T1, RH_1, T_out). Extend this list to include more variables in statistics dropdowns.
+
+## Styling and Theming
+
+CSS uses CSS custom properties (`:root` variables) for colors:
+- `--bg`, `--surface`, `--text`, `--accent`, etc.
+- Grid layouts (`.metric-grid`, `.control-grid`, `.chart-grid`) are responsive via CSS Grid
+- Important columns are highlighted with a soft background color
+
+Change the color scheme by updating `:root` variables in style.css.
+
+## Browser Compatibility
+
+- Uses ES5-compatible JavaScript (no modern syntax like arrow functions or destructuring in release code for broad compatibility)
+- Relies on Fetch API (no IE11 support)
+- Chart.js handles canvas rendering
+- Responsive design works on mobile via viewport meta tag and CSS media queries
+
+## Performance Notes
+
+- CSV parsing and all calculations are synchronous on the main thread (acceptable for ~19K rows)
+- Large datasets (100K+ rows) may benefit from Web Workers for parsing/stats
+- Charts are sampled to 650 points to keep rendering performant
+- Pagination (6 rows/page) prevents rendering many rows at once; reduced from 10 to ensure single-page fit without vertical scroll
+
+## Tab Structure and Content
+
+**1. Overview** — Introduction with 4 key metrics, UCI dataset details (location, time period, observation count, measurement interval, variables), and analysis methodology.
+
+**2. Dataset** — Interactive data table with sortable headers, pagination controls, row count display. Shows all dataset columns dynamically.
+
+**3. Statistics** — Two subsections separated by a divider:
+- Central Tendency and Dispersion: Metric cards (mean, median, mode, variance, std dev) for selected variable via dropdown
+- Correlation and Trends: Correlation card + two charts (Appliances Over Time line chart, Appliances vs lights scatter chart)
+
+**4. Inference** — Two subsections:
+- Probability Estimates (top): Dropdown inputs for Appliances threshold (preset percentiles) and lights value (auto-populated), with two probability metric cards
+- Hypothesis Test (bottom): H0/H1 hypothesis cards, mean comparison metric cards, and inference text explaining the result
+
+**5. Simulation** — Controls for variable (Appliances or Lights), simulation count (10–500), and noise level (low/medium/high). Displays simulated mean/variance, plus a line chart and results table side-by-side.
+
+**6. Report** — Professional statistical summary with executive summary, dataset overview, key findings, detailed analysis blocks, hypothesis test results, conclusions, and team member table.
